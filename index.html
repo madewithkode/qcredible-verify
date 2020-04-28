@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Verify your Qcredible signature">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <title>Qcredible - Publish, sign and verify press releases</title>
+    <!-- web-fonts -->
+    <link href='https://fonts.googleapis.com/css?family=Roboto:100,300,400,700,500' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>
+    <!-- font-awesome -->
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">   
+    <!-- Flat Icon -->
+    <link href="/css/fonts/flaticon/flaticon.css" rel="stylesheet">
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+    <!-- Style CSS -->
+    <link href="/css/index.css" rel="stylesheet">
+    <script src="/js/vue.js"></script>
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+    <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+</head>
+<body>
+<div id="main-wrapper">
+    <!-- Page Preloader -->
+    <div id="preloader">
+        <div id="status">
+            <div class="status-mes"></div>
+        </div>
+    </div>
+
+
+    <div class="content-wrapper"> 
+
+        <!-- .navbar-top -->
+        <nav class="navbar sticky-top navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand" href="/"><img class="logo" src="/images/logo.png" alt=""></a>
+            <!--<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <i class="fas fa-bars"></i>
+        </button>-->
+
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto w-100 justify-content-end">
+            <!--Nav Links go here-->
+            </ul>
+            </div>
+        </div>
+        </nav>
+        <!-- .nav -->
+
+        <section id="app" class="section-content-left-icon" style="border-bottom: none; background-color: #003300;">
+                <div class="container">
+                    <form class="form-signin">
+                        <div class="alert alert-info" role="alert">
+                            <i class="fa fa-info-circle" aria-hidden="true"></i>
+                            Verify the authenticity of official publications
+                        </div>
+                        <div class="alert alert-danger" style="margin-bottom: 8px;" role="alert" v-if="errors" v-for="error in errors">{{ error }}
+                        </div>
+                        <input v-model="pubData.pubID" type="text" class="form-control" placeholder="Paste Publication ID" autofocus>
+                        <button @click="verifyPublication" class="mybtn sign-btn btn btn-lg btn-primary btn-block"><img v-if="loading" src="/static/images/loader.gif" style="margin-right: 5px;"><i class="fas fa-certificate"></i>
+                        {{buttonText}}</button>
+                        <a style="color: wheat;" href="#" data-toggle="modal" data-target="#exampleModalCenter" class="text-center need-help">Need help? </a><span class="clearfix"></span>
+                    </form>
+                    <button style="display:none;" id="full-view"  data-toggle="modal" data-target="#exampleModal" class="btn btn-lg btn-primary btn-block">
+                        View Full</button>
+                    <button style="display:none;" id="failure-view"  data-toggle="modal" data-target="#failureModal" class="btn btn-lg btn-primary btn-block">
+                    Failure</button>
+                </div>
+                <!-- .container -->
+                <!--Success Modal-->
+                <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <div class="container-fluid">
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <h4 style="margin-top: 5px;" class="modal-title text-center" id="exampleModalLabel"><i class="fas fa-clipboard-check verified-color"></i>
+                                                Verification Successful</h4>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <p style="margin-bottom: 0px;"><strong><small id="pub-id" style="color: gray"></small></strong></p>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <strong><small id="pub-date" style="color: gray"></small></strong>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <strong>
+                                                <small style="color: gray">Publisher: {{publisher}}<i v-if="isVerified" class="fas fa-check-circle verified"></i><i v-else class="fas fa-question-circle verified"></i></small>
+                                            </strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-body">
+                                <blockquote id="full-text"></blockquote>
+                            </div>
+                            <div class="modal-footer">
+                            <a href="#" id="share-btn" v-on:click="getShareText($event)" class="mybtn btn btn-primary btn-sm sign-btn"><i class="fab fa-whatsapp"></i> Share</a>
+                            <button type="button" id="sign-btn" class="btn btn-secondary" data-dismiss="modal"><i class="fa fa-times" aria-hidden="true"></i>
+                                Close</button>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+            <!--Failure Modal--> 
+            <div class="modal fade" id="failureModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                        <h4 style="margin-top: 5px;" class="modal-title text-center" id="exampleModalLabel"><i class="fa fa-times-circle-o fa-lg" aria-hidden="true"></i>
+                            Publication not found</h4>
+                        </div>
+                        <div class="modal-body">
+                            <blockquote id="error-text"></blockquote>
+                        </div>
+                        <div class="modal-footer">
+                        <button type="button" id="sign-btn" class="btn btn-secondary" data-dismiss="modal"><i class="fa fa-times" aria-hidden="true"></i>
+                            Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--Info Modal-->
+            <div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLongTitle">About</h5>
+                    </div>
+                    <div class="modal-body">
+                            In order to curb the impersonation of the office of the SUG public relations, and also the spread of fake news in and around campus, this system was developed to verify authentic publications originating from the above named office.
+                            <p>To verify the authenticity of any publicaton bearing the name of the SUG:
+                                <ul>
+                                    <li>Look for a unique digital signature(ID) usually found at the end of every official publicaton</li>
+                                    <li>Copy the unique ID and visit this portal(https://verify.sugfuto.org)</li>
+                                    <li>Paste the ID in the verification box provided, and click 'Verify'. You'd get a notification letting you know if the publication with that ID is authentic or not.</li>
+                                </ul>
+                            Note: <small>If there's no digital signature(ID) on a publication bearing the name of the SUG, don't bother checking, it's not from us.</small>
+                            </p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fa fa-times" aria-hidden="true"></i> Close</button>
+                    </div>
+                    </div>
+                </div>
+            </div>
+            <!--Modal Ends-->
+            </section>
+            <!-- /.services-left-icon -->
+</div>
+<!-- .content-wrapper -->
+</div>
+
+<!-- #main-wrapper -->
+<!-- Script -->
+<script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/service-worker.js')
+            .then((reg) => {
+            console.log('Service worker registered.', reg);
+            });
+        });
+    }
+</script>
+<script src="/js/jquery-2.1.4.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
+<script src="/js/scripts.js"></script>
+<script src="/js/verify.js"></script>
+<div>
+    <a style="font-size:0; height:0; width:0; opacity:0; position:absolute" target="_blank" href="http://www.uicookies.com">Bootstrap Templates by uiCookies</a>        
+</div>
+</body>
+</html>
+
