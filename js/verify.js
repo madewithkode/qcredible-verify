@@ -47,14 +47,14 @@ var verifyForm = new Vue({
                 }
                 console.log(data.body);
                 const url = 'https://qcredible.herokuapp.com/api/verify';
-                timeout(1000, fetch(url, data)).then(function (response) {
+                timeout(10000, fetch(url, data)).then(function (response) {
                     if(response.status >= 200 && response.status <= 299){
                         console.log(response)
                         return response.json();
                     }else{
                         _this.buttonText = "Verify";
                         _this.loading = false;
-                        _this.errors.push('Internal Server Error, Try later!');
+                        throw 'Internal Server Error, Try later!';
                     }
                 })
                 .then(function(json){
@@ -84,7 +84,7 @@ var verifyForm = new Vue({
                     // might be a timeout error
                         _this.loading = false;
                         _this.buttonText = 'Verify';
-                        _this.errors.push("Network error, check your internet connection!");
+                        _this.errors.push("An Error Occured, check your internet connection!");
                   })
             }else{
                 _this.errors.push('Provide a signature to verify!');
